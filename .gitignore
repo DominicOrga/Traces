@@ -1,0 +1,19 @@
+#################################
+# Unreal Engine Generated Files #
+#################################
+
+Intermediate/
+Saved/
+Binaries/
+Build/
+DerivedDataCache/
+
+#################################
+# Visual Studio Generated Files #
+#################################
+
+*.VC.opendb
+*.VC.db
+*.suo
+*.ipch
+*.sln
