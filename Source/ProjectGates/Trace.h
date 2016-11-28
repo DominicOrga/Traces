@@ -7,11 +7,15 @@
 #include "Trace.generated.h"
 
 UENUM(BlueprintType)
-enum class ETraceEnum : uint8
+enum class ETraceDirection : uint8
 {
-	TRACE_Straight UMETA(DisplayName="Straight Trace"),
-	TRACE_RightTurn UMETA(DisplayName="Right Turn Trace"),
-	TRACE_LeftTurn UMETA(DisplayName="Left Turn Trace")
+	Straight UMETA(DisplayName="Straight Trace"),
+	LeftCurvedStraight UMETA(DisplayName="Left Curved Straight Trace"),
+	RightCurvedStraight UMETA(DisplayName="Right Curved Straight Trace"),
+	RightCurve UMETA(DisplayName=" Right Curve Trace"),
+	LeftStraightRightCurve UMETA(DisplayName="Left Straight Right Curve Trace"),
+	LeftCurve UMETA(DisplayName="Left Curve Trace"),
+	RightStraightLeftCurve UMETA(DisplayName="Right Straight Left Curve Trace")
 };
 
 UCLASS(BlueprintType)
@@ -39,4 +43,6 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void SetTraceDirection(ETraceDirection TraceDirection);
 };

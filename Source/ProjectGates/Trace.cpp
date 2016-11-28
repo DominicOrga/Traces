@@ -3,7 +3,6 @@
 #include "ProjectGates.h"
 #include "Trace.h"
 
-
 // Sets default values
 ATrace::ATrace()
 {
@@ -17,19 +16,6 @@ ATrace::ATrace()
 void ATrace::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	// Seperate the left trace from the right trace based on the trace distance.
-	if (!LeftTrace && !RightTrace)
-	{
-		/*FVector NewLeftTraceLocation = LeftTrace->RelativeLocation - FVector(TraceDistance / 2, 0, 0);
-		FVector NewRightTraceLocation = RightTrace->RelativeLocation + FVector(TraceDistance / 2, 0, 0);
-
-		LeftTrace->SetRelativeLocation(NewLeftTraceLocation);
-		RightTrace->SetRelativeLocation(NewRightTraceLocation);
-
-		UE_LOG(LogTemp, Warning, TEXT("Left Trace Location: %s"), *LeftTrace->RelativeLocation.ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Right Trace Location: %s"), *RightTrace->RelativeLocation.ToString());*/
-	}
 }
 
 // Called every frame
@@ -38,4 +24,3 @@ void ATrace::Tick( float DeltaTime )
 	Super::Tick( DeltaTime );
 
 }
-
