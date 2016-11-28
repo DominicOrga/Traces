@@ -12,19 +12,19 @@ UTraceEngine::UTraceEngine()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
-	// ...
 }
-
 
 // Called when the game starts
 void UTraceEngine::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
+	FindTraceBoundary();
 	
+	UChildActorComponent* Trace = ConstructObject<UChildActorComponent>(UChildActorComponent::StaticClass(), GetOwner());
+	Trace->SetChildActorClass(BPTrace);
+	Trace->CreateChildActor();
 }
-
 
 // Called every frame
 void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
@@ -34,3 +34,13 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 	// ...
 }
 
+/** Check if the owner has a Box Collision Component for encapsulation of the engine's generated objects. */
+void UTraceEngine::FindTraceBoundary()
+{
+	TraceBoundary = GetOwner()->FindComponentByClass<UBoxComponent>();
+
+	if (!TraceBoundary)
+	{
+		UE_LOG(LogTemp, Error, TEXT("%s needs a Box Collision Component for Trace Engine."), *GetOwner()->GetName());
+	}
+}

@@ -6,7 +6,15 @@
 #include "GameFramework/Actor.h"
 #include "Trace.generated.h"
 
-UCLASS()
+UENUM(BlueprintType)
+enum class ETraceEnum : uint8
+{
+	TRACE_Straight UMETA(DisplayName="Straight Trace"),
+	TRACE_RightTurn UMETA(DisplayName="Right Turn Trace"),
+	TRACE_LeftTurn UMETA(DisplayName="Left Turn Trace")
+};
+
+UCLASS(BlueprintType)
 class PROJECTGATES_API ATrace : public AActor
 {
 	GENERATED_BODY()

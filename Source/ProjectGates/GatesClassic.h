@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Trace.h"
 #include "GameFramework/Actor.h"
 #include "GatesClassic.generated.h"
 

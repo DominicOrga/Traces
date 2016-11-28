@@ -16,7 +16,6 @@ AGatesClassic::AGatesClassic()
 void AGatesClassic::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame

@@ -8,8 +8,9 @@
 ATrace::ATrace()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
+	UE_LOG(LogTemp, Warning, TEXT("Trace Object created."));
 }
 
 // Called when the game starts or when spawned
@@ -18,14 +19,17 @@ void ATrace::BeginPlay()
 	Super::BeginPlay();
 	
 	// Seperate the left trace from the right trace based on the trace distance.
-	FVector NewLeftTraceLocation = LeftTrace->RelativeLocation - FVector(TraceDistance / 2, 0, 0);
-	FVector NewRightTraceLocation = RightTrace->RelativeLocation + FVector(TraceDistance / 2, 0, 0);
+	if (!LeftTrace && !RightTrace)
+	{
+		/*FVector NewLeftTraceLocation = LeftTrace->RelativeLocation - FVector(TraceDistance / 2, 0, 0);
+		FVector NewRightTraceLocation = RightTrace->RelativeLocation + FVector(TraceDistance / 2, 0, 0);
 
-	LeftTrace->SetRelativeLocation(NewLeftTraceLocation);
-	RightTrace->SetRelativeLocation(NewRightTraceLocation);
+		LeftTrace->SetRelativeLocation(NewLeftTraceLocation);
+		RightTrace->SetRelativeLocation(NewRightTraceLocation);
 
-	UE_LOG(LogTemp, Warning, TEXT("Left Trace Location: %s"), *LeftTrace->RelativeLocation.ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Right Trace Location: %s"), *RightTrace->RelativeLocation.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Left Trace Location: %s"), *LeftTrace->RelativeLocation.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Right Trace Location: %s"), *RightTrace->RelativeLocation.ToString());*/
+	}
 }
 
 // Called every frame
