@@ -18,7 +18,6 @@ void UTraceEngine::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InstantiateTraces();
 	PositionTraces();
 }
 
@@ -36,21 +35,6 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 		AttachEndTraceToStart();
 	}
 
-}
-
-/** Instantiate and cache traces based on the TraceCacheCount. */
-void UTraceEngine::InstantiateTraces()
-{
-	for (int i = 0; i < TraceCacheCount; i++)
-	{
-		UChildActorComponent* TraceChildActorComponent = 
-			NewObject<UChildActorComponent>(GetOwner(), UChildActorComponent::StaticClass());
-
-		TraceChildActorComponent->SetChildActorClass(TraceBP);
-		TraceChildActorComponent->CreateChildActor();
-
-		TraceChildActorComponents.Emplace(TraceChildActorComponent);
-	}
 }
 
 /** Initialize the position of each available cached traces into a vertical line. */

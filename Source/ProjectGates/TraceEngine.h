@@ -15,31 +15,28 @@ class PROJECTGATES_API UTraceEngine : public UActorComponent
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+	UPROPERTY(BlueprintReadWrite)
 	FVector BackgroundBounds;
-
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
-	TArray<ULogicGate*> GateComponents;
 
 	/* The total number of gates to cache. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int GateCacheCount;
 
-private:
-	/* A reference to the Blueprint Trace class to instantiate traces baseed on that class. */
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ATrace> TraceBP;
-
 	/* The total number of traces to cache. */
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int TraceCacheCount;
 
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+	TArray<ULogicGate*> GateComponents;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+	TArray<UChildActorComponent*> TraceChildActorComponents;
+
+private:
 	float Momentum;
 
 	int StartTraceIndex;
-
-	TArray<UChildActorComponent*> TraceChildActorComponents;
-
+	int GateIndex;
 
 public:	
 	// Sets default values for this component's properties
@@ -50,9 +47,6 @@ public:
 	
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
-
-	/** Instantiate and cache traces based on the TraceCacheCount. */
-	void InstantiateTraces();
 
 	/** Initialize the position of each available cached traces into a straight line. */
 	UFUNCTION(BlueprintCallable, Category="Utilities")
