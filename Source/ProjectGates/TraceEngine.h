@@ -15,9 +15,15 @@ class PROJECTGATES_API UTraceEngine : public UActorComponent
 	GENERATED_BODY()
 
 protected:
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
 	FVector BackgroundBounds;
+
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
+	TArray<ULogicGate*> GateComponents;
+
+	/* The total number of gates to cache. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int GateCacheCount;
 
 private:
 	/* A reference to the Blueprint Trace class to instantiate traces baseed on that class. */
@@ -28,17 +34,12 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	int TraceCacheCount;
 
-	/* The total number of gates to cache. */
-	UPROPERTY(EditDefaultsOnly)
-	int GateCacheCount;
-
 	float Momentum;
 
 	int StartTraceIndex;
 
 	TArray<UChildActorComponent*> TraceChildActorComponents;
 
-	TArray<ULogicGate*> GateComponents;
 
 public:	
 	// Sets default values for this component's properties
@@ -67,6 +68,4 @@ public:
 	bool CheckStartTraceInsideBgBounds();
 
 	void AttachEndTraceToStart();
-
-	void InstantiateGates();
 };

@@ -5,7 +5,7 @@
 
 // Sets default values for this component's properties
 UTraceEngine::UTraceEngine() :
-	Momentum(5), StartTraceIndex(0)
+	Momentum(5), StartTraceIndex(0), GateIndex(0)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
@@ -119,9 +119,4 @@ void UTraceEngine::AttachEndTraceToStart()
 
 	// End trace is now the new start trace.
 	StartTraceIndex = EndTraceIndex;
-}
-
-void UTraceEngine::InstantiateGates()
-{
-
 }

@@ -8,10 +8,14 @@
 UENUM(BlueprintType)
 enum class EGateType : uint8
 {
-	AND UMETA(DisplayName = "AND")
+	AND UMETA(DisplayName = "AND"),
+	NAND UMETA(DisplayName = "NAND"),
+	OR UMETA(DisplayName = "OR"),
+	NOR UMETA(DisplayName = "NOR"),
+	XOR UMETA(DisplayName = "XOR")
 };
 
-UCLASS(Blueprintable)
+UCLASS(Blueprintable, meta=(BlueprintSpawnableComponent))
 class PROJECTGATES_API ULogicGate : public UPaperSpriteComponent
 {
 	GENERATED_BODY()
