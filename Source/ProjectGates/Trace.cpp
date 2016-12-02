@@ -22,5 +22,4 @@ void ATrace::BeginPlay()
 void ATrace::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
-
 }

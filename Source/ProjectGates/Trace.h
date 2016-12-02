@@ -1,4 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,30 +6,27 @@
 #include "Trace.generated.h"
 
 UENUM(BlueprintType)
-enum class ETraceDirection : uint8
+enum class ETraceType : uint8
 {
-	Straight UMETA(DisplayName="Straight Trace"),
-	LeftCurvedStraight UMETA(DisplayName="Left Curved Straight Trace"),
-	RightCurvedStraight UMETA(DisplayName="Right Curved Straight Trace"),
-	RightCurve UMETA(DisplayName=" Right Curve Trace"),
-	LeftStraightRightCurve UMETA(DisplayName="Left Straight Right Curve Trace"),
-	LeftCurve UMETA(DisplayName="Left Curve Trace"),
-	RightStraightLeftCurve UMETA(DisplayName="Right Straight Left Curve Trace")
+	Complete UMETA(DisplayName = "Complete"),
+	RightOnly UMETA(DisplayName = "RightOnly"),
+	LeftOnly UMETA(DisplayName = "LeftOnly")
 };
 
-UCLASS(BlueprintType)
+UCLASS(abstract, BlueprintType)
 class PROJECTGATES_API ATrace : public AActor
 {
 	GENERATED_BODY()
 
-public:
-	UPROPERTY(BlueprintReadWrite)
+protected:
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
 	UPaperSpriteComponent* LeftTrace;
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(VisibleDefaultsOnly, BlueprintReadWrite)
 	UPaperSpriteComponent* RightTrace;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+private: 
+	UPROPERTY(EditDefaultsOnly)
 	float TraceDistance;
 
 public:	
@@ -43,6 +39,7 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
+	/** Set the type of trace this object will represent. */
 	UFUNCTION(BlueprintImplementableEvent)
-	void SetTraceDirection(ETraceDirection TraceDirection);
+	void SetTraceType(ETraceType TraceType);
 };
