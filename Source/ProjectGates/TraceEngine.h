@@ -66,9 +66,11 @@ public:
 	/** Move down the traces based on the Momentum. */
 	void MoveDownTraces();
 
-	bool CheckStartTraceInsideBgBounds();
+	bool CheckStartTraceInsideBgBounds() const;
 
 	void AttachEndTraceToStart();
 
 	bool CheckGateInsideBgBounds();
+
+	void  MoveDownGates();
 };

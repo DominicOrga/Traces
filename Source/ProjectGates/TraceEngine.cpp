@@ -5,7 +5,7 @@
 
 // Sets default values for this component's properties
 UTraceEngine::UTraceEngine() :
-	Momentum(5), StartTraceIndex(0), GateIndex(0), TraceProductionSize(5), TraceProduced(TraceProductionSize),
+	Momentum(5), StartTraceIndex(0), GateIndex(0), TraceProductionSize(2), TraceProduced(TraceProductionSize),
 	IsGateAdded(false)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -31,6 +31,7 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
 	MoveDownTraces();
+	MoveDownGates();
 
 	if (TraceProduced < TraceProductionSize)
 	{
@@ -39,9 +40,14 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 		if (CheckStartTraceInsideBgBounds())
 		{
 			AttachEndTraceToStart();
-		}
+			TraceProduced++;
 
-		TraceProduced++;
+			UE_LOG(LogTemp, Warning, TEXT("Start Trace Produced."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Start Trace Still outside Bounds."));
+		}
 	}
 	else
 	{	
@@ -55,7 +61,7 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 				IsGateAdded = false;
 			}
 		}
-		else
+		else if (CheckStartTraceInsideBgBounds())
 		{
 			// Find the index of the next available gate to be recycled.
 			GateIndex = (GateIndex == (GateCacheCount - 1)) ? 0 : GateIndex + 1;
@@ -68,7 +74,7 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 			UE_LOG(LogTemp, Warning, TEXT("Gate Bounds: %s"), *BoxExtent.ToString());
 
 			// Place the gate at the top-center of the background bounds.
-			FVector NewLocation = FVector(0, 50, BackgroundBounds.Z + BoxExtent.Z);
+			FVector NewLocation = FVector(0, 100, BackgroundBounds.Z + BoxExtent.Z);
 
 			Gate->SetRelativeLocation(NewLocation);
 
@@ -113,7 +119,7 @@ void UTraceEngine::MoveDownTraces()
 	}
 }
 
-bool UTraceEngine::CheckStartTraceInsideBgBounds()
+bool UTraceEngine::CheckStartTraceInsideBgBounds() const
 {
 	AActor* Trace = TraceChildActorComponents[StartTraceIndex]->GetChildActor();
 
@@ -121,9 +127,12 @@ bool UTraceEngine::CheckStartTraceInsideBgBounds()
 	FVector BoxExtent;
 	Trace->GetActorBounds(false, OUT Origin, OUT BoxExtent);
 
-	float StartTraceLocationZ = Trace->GetActorLocation().Z;
+	float TraceLocationZ = Trace->GetActorLocation().Z;
 
-	return (StartTraceLocationZ == BackgroundBounds.Z - BoxExtent.Z);
+	UE_LOG(LogTemp, Warning, TEXT("Start Trace Location Z: %.4f"), TraceLocationZ);
+	UE_LOG(LogTemp, Warning, TEXT("Trace Location Z Bounds: %.4f"), BackgroundBounds.Z - BoxExtent.Z);
+
+	return (TraceLocationZ <= BackgroundBounds.Z - BoxExtent.Z);
 }
 
 void UTraceEngine::AttachEndTraceToStart()
@@ -143,8 +152,13 @@ void UTraceEngine::AttachEndTraceToStart()
 	AActor* EndTrace = TraceChildActorComponents[EndTraceIndex]->GetChildActor();
 	EndTrace->SetActorLocation(FVector(0, 50, BackgroundBounds.Z + BoxExtent.Z));
 
+	UE_LOG(LogTemp, Warning, TEXT("Previous Start Trace Index: %d"), StartTraceIndex);
+
 	// End trace is now the new start trace.
 	StartTraceIndex = EndTraceIndex;
+
+	UE_LOG(LogTemp, Warning, TEXT("New Start Trace Index: %d"), StartTraceIndex);
+
 }
 
 bool UTraceEngine::CheckGateInsideBgBounds()
@@ -154,5 +168,14 @@ bool UTraceEngine::CheckGateInsideBgBounds()
 
 	FVector BoxExtent = Gate->Bounds.BoxExtent;
 
-	return (Gate->RelativeLocation.Z == (BackgroundBounds.Z - BoxExtent.Z));
+	return (Gate->RelativeLocation.Z <= (BackgroundBounds.Z - BoxExtent.Z));
+}
+
+void UTraceEngine::MoveDownGates()
+{
+	for (ULogicGate* Gate : GateComponents)
+	{
+		FVector NewLocation = Gate->RelativeLocation - FVector(0, 0, Momentum);
+		Gate->SetRelativeLocation(NewLocation);
+	}
 }
