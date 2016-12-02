@@ -5,12 +5,14 @@
 
 // Sets default values for this component's properties
 UTraceEngine::UTraceEngine() :
-	Momentum(5), StartTraceIndex(0), GateIndex(0)
+	Momentum(5), StartTraceIndex(0), GateIndex(0), TraceProductionSize(5), TraceProduced(TraceProductionSize),
+	IsGateAdded(false)
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
+
 }
 
 // Called when the game starts
@@ -19,6 +21,8 @@ void UTraceEngine::BeginPlay()
 	Super::BeginPlay();
 
 	PositionTraces();
+
+	LatestAddedComponent = TraceChildActorComponents[0];
 }
 
 // Called every frame
@@ -28,13 +32,51 @@ void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorCo
 
 	MoveDownTraces();
 
-	// If the current start trace is fully inside the background bounds,
-	//		then set the last trace as the new start trace and attach it to the top.
-	if (CheckStartTraceInsideBgBounds())
+	if (TraceProduced < TraceProductionSize)
 	{
-		AttachEndTraceToStart();
-	}
+		// If the current start trace is fully inside the background bounds,
+		//		then set the last trace as the new start trace and attach it to the top.
+		if (CheckStartTraceInsideBgBounds())
+		{
+			AttachEndTraceToStart();
+		}
 
+		TraceProduced++;
+	}
+	else
+	{	
+		if (IsGateAdded)
+		{
+			if (CheckGateInsideBgBounds())
+			{
+				AttachEndTraceToStart();
+				TraceProduced = 1;
+
+				IsGateAdded = false;
+			}
+		}
+		else
+		{
+			// Find the index of the next available gate to be recycled.
+			GateIndex = (GateIndex == (GateCacheCount - 1)) ? 0 : GateIndex + 1;
+
+			ULogicGate* Gate = GateComponents[GateIndex];
+			Gate->SetGateType(EGateType::AND);
+
+			FVector BoxExtent = Gate->Bounds.BoxExtent;
+
+			UE_LOG(LogTemp, Warning, TEXT("Gate Bounds: %s"), *BoxExtent.ToString());
+
+			// Place the gate at the top-center of the background bounds.
+			FVector NewLocation = FVector(0, 50, BackgroundBounds.Z + BoxExtent.Z);
+
+			Gate->SetRelativeLocation(NewLocation);
+
+			IsGateAdded = true;
+
+			UE_LOG(LogTemp, Warning, TEXT("Gate Added."));
+		}
+	}
 }
 
 /** Initialize the position of each available cached traces into a vertical line. */
@@ -95,7 +137,7 @@ void UTraceEngine::AttachEndTraceToStart()
 	// Find the trace at the end of the line.
 	int EndTraceIndex = (StartTraceIndex == 0) ?
 		(TraceCacheCount - 1) :
-		(StartTraceIndex + (TraceCacheCount)) % (TraceCacheCount)-1;
+		(StartTraceIndex + (TraceCacheCount)) % (TraceCacheCount) - 1;
 
 	// Attach the last trace to the top of the line.
 	AActor* EndTrace = TraceChildActorComponents[EndTraceIndex]->GetChildActor();
@@ -103,4 +145,14 @@ void UTraceEngine::AttachEndTraceToStart()
 
 	// End trace is now the new start trace.
 	StartTraceIndex = EndTraceIndex;
+}
+
+bool UTraceEngine::CheckGateInsideBgBounds()
+{
+
+	ULogicGate* Gate = GateComponents[GateIndex];
+
+	FVector BoxExtent = Gate->Bounds.BoxExtent;
+
+	return (Gate->RelativeLocation.Z == (BackgroundBounds.Z - BoxExtent.Z));
 }

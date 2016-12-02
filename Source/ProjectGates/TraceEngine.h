@@ -38,6 +38,13 @@ private:
 	int StartTraceIndex;
 	int GateIndex;
 
+	int TraceProductionSize;
+	int TraceProduced;
+
+	UObject* LatestAddedComponent;
+
+	bool IsGateAdded;
+
 public:	
 	// Sets default values for this component's properties
 	UTraceEngine();
@@ -62,4 +69,6 @@ public:
 	bool CheckStartTraceInsideBgBounds();
 
 	void AttachEndTraceToStart();
+
+	bool CheckGateInsideBgBounds();
 };
