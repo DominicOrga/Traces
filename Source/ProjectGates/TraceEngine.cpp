@@ -3,86 +3,32 @@
 #include "ProjectGates.h"
 #include "TraceEngine.h"
 
-// Sets default values for this component's properties
 UTraceEngine::UTraceEngine() :
-	Momentum(5), StartTraceIndex(0), GateIndex(0), TraceProductionSize(2), TraceProduced(TraceProductionSize),
-	IsGateAdded(false)
+	Speed(5), 
+	InsertedTraceIndex(0), 
+	InsertedGateIndex(0), 
+	TraceProductionSize(2), 
+	TraceProduced(TraceProductionSize),
+	IsGateInserted(false)
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 
 }
 
-// Called when the game starts
 void UTraceEngine::BeginPlay()
 {
 	Super::BeginPlay();
 
 	PositionTraces();
-
-	LatestAddedComponent = TraceChildActorComponents[0];
 }
 
-// Called every frame
 void UTraceEngine::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {
 	Super::TickComponent( DeltaTime, TickType, ThisTickFunction );
 
-	MoveDownTraces();
-	MoveDownGates();
-
-	if (TraceProduced < TraceProductionSize)
-	{
-		// If the current start trace is fully inside the background bounds,
-		//		then set the last trace as the new start trace and attach it to the top.
-		if (CheckStartTraceInsideBgBounds())
-		{
-			AttachEndTraceToStart();
-			TraceProduced++;
-
-			UE_LOG(LogTemp, Warning, TEXT("Start Trace Produced."));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Start Trace Still outside Bounds."));
-		}
-	}
-	else
-	{	
-		if (IsGateAdded)
-		{
-			if (CheckGateInsideBgBounds())
-			{
-				AttachEndTraceToStart();
-				TraceProduced = 1;
-
-				IsGateAdded = false;
-			}
-		}
-		else if (CheckStartTraceInsideBgBounds())
-		{
-			// Find the index of the next available gate to be recycled.
-			GateIndex = (GateIndex == (GateCacheCount - 1)) ? 0 : GateIndex + 1;
-
-			ULogicGate* Gate = GateComponents[GateIndex];
-			Gate->SetGateType(EGateType::AND);
-
-			FVector BoxExtent = Gate->Bounds.BoxExtent;
-
-			UE_LOG(LogTemp, Warning, TEXT("Gate Bounds: %s"), *BoxExtent.ToString());
-
-			// Place the gate at the top-center of the background bounds.
-			FVector NewLocation = FVector(0, 100, BackgroundBounds.Z + BoxExtent.Z);
-
-			Gate->SetRelativeLocation(NewLocation);
-
-			IsGateAdded = true;
-
-			UE_LOG(LogTemp, Warning, TEXT("Gate Added."));
-		}
-	}
+	MoveDownComponents();
+	InsertComponentIfPossible();
 }
 
 /** Initialize the position of each available cached traces into a vertical line. */
@@ -99,8 +45,8 @@ void UTraceEngine::PositionTraces()
 		FVector BoxExtent;
 		Trace->GetActorBounds(false, OUT Origin, OUT BoxExtent);
 
-		// First trace pivot point will be placed at the top-center of the background bounds.
-		// Following trace will follow from there.
+		// First inserted trace pivot point will be placed at the top-center of the background bounds.
+		// Other traces to be inserted will follow from there.
 		float LocationZ = BackgroundBounds.Z - (BoxExtent.Z * 2) * i;
 		FVector NewLocation = FVector(0, 50, LocationZ);
 
@@ -108,20 +54,9 @@ void UTraceEngine::PositionTraces()
 	}
 }
 
-/** Move down the traces based on the Momentum. */
-void UTraceEngine::MoveDownTraces()
+bool UTraceEngine::IsInsertedTraceInsideBounds() const
 {
-	for (UChildActorComponent* TraceChildActorComponent : TraceChildActorComponents)
-	{
-		AActor* Trace = TraceChildActorComponent->GetChildActor();
-		FVector NewLocation = Trace->GetActorLocation() - FVector(0, 0, Momentum);
-		Trace->SetActorLocation(NewLocation);
-	}
-}
-
-bool UTraceEngine::CheckStartTraceInsideBgBounds() const
-{
-	AActor* Trace = TraceChildActorComponents[StartTraceIndex]->GetChildActor();
+	AActor* Trace = TraceChildActorComponents[InsertedTraceIndex]->GetChildActor();
 
 	FVector Origin;
 	FVector BoxExtent;
@@ -129,53 +64,113 @@ bool UTraceEngine::CheckStartTraceInsideBgBounds() const
 
 	float TraceLocationZ = Trace->GetActorLocation().Z;
 
-	UE_LOG(LogTemp, Warning, TEXT("Start Trace Location Z: %.4f"), TraceLocationZ);
-	UE_LOG(LogTemp, Warning, TEXT("Trace Location Z Bounds: %.4f"), BackgroundBounds.Z - BoxExtent.Z);
-
 	return (TraceLocationZ <= BackgroundBounds.Z - BoxExtent.Z);
 }
 
-void UTraceEngine::AttachEndTraceToStart()
-{
-	AActor* Trace = TraceChildActorComponents[StartTraceIndex]->GetChildActor();
-
-	FVector Origin;
-	FVector BoxExtent;
-	Trace->GetActorBounds(false, OUT Origin, OUT BoxExtent);
-
-	// Find the trace at the end of the line.
-	int EndTraceIndex = (StartTraceIndex == 0) ?
-		(TraceCacheCount - 1) :
-		(StartTraceIndex + (TraceCacheCount)) % (TraceCacheCount) - 1;
-
-	// Attach the last trace to the top of the line.
-	AActor* EndTrace = TraceChildActorComponents[EndTraceIndex]->GetChildActor();
-	EndTrace->SetActorLocation(FVector(0, 50, BackgroundBounds.Z + BoxExtent.Z));
-
-	UE_LOG(LogTemp, Warning, TEXT("Previous Start Trace Index: %d"), StartTraceIndex);
-
-	// End trace is now the new start trace.
-	StartTraceIndex = EndTraceIndex;
-
-	UE_LOG(LogTemp, Warning, TEXT("New Start Trace Index: %d"), StartTraceIndex);
-
-}
-
-bool UTraceEngine::CheckGateInsideBgBounds()
+bool UTraceEngine::IsInsertedGateInsideBounds() const
 {
 
-	ULogicGate* Gate = GateComponents[GateIndex];
+	ULogicGate* Gate = GateComponents[InsertedGateIndex];
 
 	FVector BoxExtent = Gate->Bounds.BoxExtent;
 
 	return (Gate->RelativeLocation.Z <= (BackgroundBounds.Z - BoxExtent.Z));
 }
 
-void UTraceEngine::MoveDownGates()
+/** Recycle by getting the oldest trace inserted and re-insert it. */
+void UTraceEngine::InsertTrace()
 {
+	AActor* Trace = TraceChildActorComponents[InsertedTraceIndex]->GetChildActor();
+
+	FVector Origin;
+	FVector BoxExtent;
+	Trace->GetActorBounds(false, OUT Origin, OUT BoxExtent);
+
+	// Find the trace at the end of the line.
+	int EndTraceIndex = (InsertedTraceIndex == 0) ?
+		(TraceCacheCount - 1) :
+		(InsertedTraceIndex + (TraceCacheCount)) % (TraceCacheCount)-1;
+
+	// Attach the last trace to the top of the line.
+	AActor* EndTrace = TraceChildActorComponents[EndTraceIndex]->GetChildActor();
+	EndTrace->SetActorLocation(FVector(0, 50, BackgroundBounds.Z + BoxExtent.Z));
+
+	// End trace is now the new start trace.
+	InsertedTraceIndex = EndTraceIndex;
+}
+
+/** Recycle by getting the oldest gate inserted and re-insert it. */
+void UTraceEngine::InsertGate()
+{
+	// Find the index of the next available gate to be recycled.
+	InsertedGateIndex = (InsertedGateIndex == (GateCacheCount - 1)) ? 0 : InsertedGateIndex + 1;
+	ULogicGate* Gate = GateComponents[InsertedGateIndex];
+	
+	Gate->SetGateType(EGateType::AND);
+
+	FVector BoxExtent = Gate->Bounds.BoxExtent;
+
+	// Place the gate at the top-center of the background bounds.
+	FVector NewLocation = FVector(0, 75, BackgroundBounds.Z + BoxExtent.Z);
+	Gate->SetRelativeLocation(NewLocation);
+}
+
+/** Move down this objects components, such as the traces and gates based on the Speed. */
+void UTraceEngine::MoveDownComponents()
+{
+	// Move down the traces.
+	for (UChildActorComponent* TraceChildActorComponent : TraceChildActorComponents)
+	{
+		AActor* Trace = TraceChildActorComponent->GetChildActor();
+		FVector NewLocation = Trace->GetActorLocation() - FVector(0, 0, Speed);
+		Trace->SetActorLocation(NewLocation);
+	}
+
+	// Move down the gates.
 	for (ULogicGate* Gate : GateComponents)
 	{
-		FVector NewLocation = Gate->RelativeLocation - FVector(0, 0, Momentum);
+		FVector NewLocation = Gate->RelativeLocation - FVector(0, 0, Speed);
 		Gate->SetRelativeLocation(NewLocation);
+	}
+}
+
+/**
+ * Determine which component is to be inserted.
+ * Once the component is identified, if the last component inserted is inside the bounds, then insert it.
+ * Otherwise, do nothing.
+ */
+void UTraceEngine::InsertComponentIfPossible()
+{
+	// If true, then a trace is next in line to be inserted.
+	// If false, then a gate is to be inserted.
+	if (TraceProduced < TraceProductionSize)
+	{
+		// If the inserted trace is fully inside the background bounds, then insert another trace.
+		if (IsInsertedTraceInsideBounds())
+		{
+			InsertTrace();
+			TraceProduced++;
+		}
+	}
+	else
+	{
+		// Check if a gate is already inserted following the inserted trace.
+		// If no gate is inserted, then check if the inserted trace is inside the boundary.
+		if (IsGateInserted)
+		{
+			// If inserted gate is inside the bounds, then reset the TraceProduced and in insert a new trace.
+			if (IsInsertedGateInsideBounds())
+			{
+				InsertTrace();
+				TraceProduced = 1;
+				IsGateInserted = false;
+			}
+		}
+		else if (IsInsertedTraceInsideBounds())
+		{
+			// Insert gate.
+			InsertGate();
+			IsGateInserted = true;
+		}
 	}
 }

@@ -18,11 +18,9 @@ protected:
 	UPROPERTY(BlueprintReadWrite)
 	FVector BackgroundBounds;
 
-	/* The total number of gates to cache. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int GateCacheCount;
 
-	/* The total number of traces to cache. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	int TraceCacheCount;
 
@@ -33,26 +31,29 @@ protected:
 	TArray<UChildActorComponent*> TraceChildActorComponents;
 
 private:
-	float Momentum;
+	/* Movement speed of the traces and gates. */
+	float Speed;
 
-	int StartTraceIndex;
-	int GateIndex;
+	/* The index of the newly inserted trace. */
+	int InsertedTraceIndex;
 
+	/* The index of the newly inserted gate. */
+	int InsertedGateIndex;
+
+	/* The number of traces to be produced every after gate insertion. */
 	int TraceProductionSize;
+
+	/* The number of traces produced. Resets when a gate is inserted. */
 	int TraceProduced;
 
-	UObject* LatestAddedComponent;
-
-	bool IsGateAdded;
+	/* True when a gate is inserted. Resets to false when a trace is inserted. */
+	bool IsGateInserted;
 
 public:	
-	// Sets default values for this component's properties
 	UTraceEngine();
 
-	// Called when the game starts
 	virtual void BeginPlay() override;
 	
-	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
 	/** Initialize the position of each available cached traces into a straight line. */
@@ -63,14 +64,23 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void SetBackgroundBounds();
 
-	/** Move down the traces based on the Momentum. */
-	void MoveDownTraces();
+	bool IsInsertedTraceInsideBounds() const;
 
-	bool CheckStartTraceInsideBgBounds() const;
+	bool IsInsertedGateInsideBounds() const;
 
-	void AttachEndTraceToStart();
+	/** Recycle by getting the oldest trace inserted and re-insert it. */
+	void InsertTrace();
 
-	bool CheckGateInsideBgBounds();
+	/** Recycle by getting the oldest gate inserted and re-insert it. */
+	void InsertGate();
 
-	void  MoveDownGates();
+	/** Move down this objects components, such as the traces and gates based on the Speed. */
+	void MoveDownComponents();
+
+	/** 
+	 * Determine which component is to be inserted. 
+	 * Once the component is identified, if the last component inserted is inside the bounds, then insert it.
+	 * Otherwise, do nothing.
+	 */
+	void InsertComponentIfPossible();
 };
